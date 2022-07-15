@@ -93,6 +93,7 @@ const SignUpPage = () => {
                 </p>
               )}
             </div>
+
             <div>
               <button className="w-full mt-2 text-white bg-blue-500 border-blue-500 btn hover:bg-blue-500 hover:border-blue-500 focus:border-blue-500">
                 Sign Up

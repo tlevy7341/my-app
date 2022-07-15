@@ -7,7 +7,7 @@ import { userStore } from "../zustand/userStore";
 const PersistLogin = () => {
   const [isLoading, setIsLoading] = useState(true);
   const refresh = useRefreshToken();
-  const { accessToken } = userStore();
+  const { accessToken, persist } = userStore();
 
   useEffect(() => {
     let isMounted = true;
@@ -29,7 +29,9 @@ const PersistLogin = () => {
 
   return (
     <>
-      {isLoading ? (
+      {!persist ? (
+        <Outlet />
+      ) : isLoading ? (
         <div className="flex items-center justify-center w-screen h-screen bg-transparent">
           <BarLoader />
         </div>

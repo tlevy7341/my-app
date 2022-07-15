@@ -4,7 +4,6 @@ import { userStore } from "../zustand/userStore";
 const RequireAuth = () => {
   const location = useLocation();
   const { user } = userStore();
-  console.log("🚀 ~ RequireAuth ~ user", user);
 
   return user ? (
     <Outlet />

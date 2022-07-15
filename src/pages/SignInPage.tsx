@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -6,7 +7,7 @@ import { z } from "zod";
 import { userStore } from "../zustand/userStore";
 
 const SignInPage = () => {
-  const { signInUser, user } = userStore();
+  const { signInUser, user, persist } = userStore();
   const navigate = useNavigate();
   const location: any = useLocation();
   const from = location?.state?.from?.pathname || "/";
@@ -42,6 +43,14 @@ const SignInPage = () => {
     navigate(from, { replace: true });
     reset();
   };
+
+  const togglePersist = () => {
+    userStore.setState({ persist: !persist });
+  };
+
+  useEffect(() => {
+    localStorage.setItem("persist", JSON.stringify(persist));
+  }, [persist]);
 
   return (
     <div className="flex flex-col justify-center min-h-screen bg-gray-100 ">
@@ -96,7 +105,18 @@ const SignInPage = () => {
                 </p>
               )}
             </div>
-
+            <div>
+              <input
+                id={"persist"}
+                name={"persist"}
+                type={"checkbox"}
+                checked={persist}
+                onChange={togglePersist}
+              />
+              <label className="ml-2 text-sm" htmlFor="persist">
+                Trust this device
+              </label>
+            </div>
             <div>
               <button
                 type="submit"
