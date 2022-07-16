@@ -1,66 +1,64 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
-import { z } from "zod";
+import { useLocation, useNavigate } from "react-router-dom";
+import { BeatLoader } from "react-spinners";
+import {
+  forgotPasswordFormSchema,
+  forgotPasswordFormSchemaType,
+} from "../schemas/AuthSchemas";
+import { userStore } from "../zustand/userStore";
 
 const ForgotPasswordPage = () => {
-  const FormSchema = z.object({
-    email: z
-      .string({ required_error: "This field is required" })
-      .email()
-      .trim(),
-  });
-
-  type FormSchemaType = z.infer<typeof FormSchema>;
-
+  const { sendForgotPasswordEmail } = userStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   const {
     register,
     reset,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormSchemaType>({
-    resolver: zodResolver(FormSchema),
+  } = useForm<forgotPasswordFormSchemaType>({
+    resolver: zodResolver(forgotPasswordFormSchema),
   });
 
-  const submitData = async (formData: FormSchemaType) => {
-    const response = await fetch("/forgot-password", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
-    const result = await response.json();
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
-    toast.success(result.message);
+  const sendForgotPassword = async (formData: forgotPasswordFormSchemaType) => {
+    setIsLoading(true);
+    await sendForgotPasswordEmail(formData.email);
+
     reset();
+    navigate("/check-email", { state: { from: location.pathname } });
   };
 
+  useEffect(() => {
+    return () => {
+      setIsLoading(false);
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="px-4 sm:max-w-xl sm:mx-auto flex flex-col gap-y-7 py-5 bg-white shadow-lg rounded sm:p-10">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="flex flex-col px-4 py-5 bg-white rounded shadow-lg sm:max-w-xl sm:mx-auto gap-y-7 sm:p-10">
         <div>
-          <h1 className="text-2xl text-center text-black font-semibold">
+          <h1 className="text-2xl font-semibold text-center text-black">
             Forgot your password?
           </h1>
         </div>
         <div>
-          <p className="text-gray-500 text-sm">
+          <p className="text-sm text-gray-500">
             Don't fret! Just type in your email and we will send you an email to
             reset your password!
           </p>
         </div>
-        <form onSubmit={handleSubmit(submitData)}>
+        <form onSubmit={handleSubmit(sendForgotPassword)}>
           <div className="relative">
             <input
               {...register("email")}
               id="email"
               name="email"
               type="text"
-              className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600"
+              className="w-full h-10 text-gray-900 placeholder-transparent border-b-2 border-gray-300 peer focus:outline-none focus:borer-rose-600"
               placeholder="Email address"
             />
             <label
@@ -70,13 +68,13 @@ const ForgotPasswordPage = () => {
               Email Address
             </label>
             {errors.email && (
-              <p className="text-sm mt-0 text-red-500">
+              <p className="mt-0 text-sm text-red-500">
                 {errors.email.message}
               </p>
             )}
           </div>
-          <button className="btn bg-blue-500 mt-4 text-white border-blue-500 hover:bg-blue-500 hover:border-blue-500 focus:border-blue-500  w-full">
-            Send Email
+          <button className="w-full mt-4 text-white bg-blue-500 border-blue-500 btn hover:bg-blue-500 hover:border-blue-500 focus:border-blue-500">
+            {isLoading ? <BeatLoader color="white" /> : "Send Email"}
           </button>
         </form>
       </div>

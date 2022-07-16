@@ -2,37 +2,25 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { z } from "zod";
+import { signUpFormSchema, signUpFormSchemaType } from "../schemas/AuthSchemas";
 import { userStore } from "../zustand/userStore";
 
 const SignUpPage = () => {
   const { signUpUser } = userStore();
   const navigate = useNavigate();
-  const FormSchema = z.object({
-    email: z
-      .string({ required_error: "This field is required" })
-      .email()
-      .trim(),
-    password: z
-      .string({ required_error: "This field is required" })
-      .min(1, "Please enter a password")
-      .trim(),
-  });
-
-  type FormSchemaType = z.infer<typeof FormSchema>;
 
   const {
     register,
     reset,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormSchemaType>({
-    resolver: zodResolver(FormSchema),
+  } = useForm<signUpFormSchemaType>({
+    resolver: zodResolver(signUpFormSchema),
   });
 
-  const submitData = async (formData: FormSchemaType) => {
+  const handleSignUpUser = async (formData: signUpFormSchemaType) => {
     const response = await signUpUser(formData.email, formData.password);
-    if (response.error) {
+    if (response?.error) {
       toast.error(response.error);
       return;
     }
@@ -49,7 +37,7 @@ const SignUpPage = () => {
             Sign Up
           </h1>
         </div>
-        <form onSubmit={handleSubmit(submitData)}>
+        <form onSubmit={handleSubmit(handleSignUpUser)}>
           <div className="pt-8 space-y-4 text-base text-gray-700 sm:text-lg ">
             <div className="relative">
               <input

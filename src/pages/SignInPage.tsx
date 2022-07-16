@@ -3,43 +3,33 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { z } from "zod";
+import { signInFormSchema, signInFormSchemaType } from "../schemas/AuthSchemas";
+
 import { userStore } from "../zustand/userStore";
 
 const SignInPage = () => {
-  const { signInUser, user, persist } = userStore();
+  const { signInUser, persist } = userStore();
   const navigate = useNavigate();
   const location: any = useLocation();
   const from = location?.state?.from?.pathname || "/";
-  const FormSchema = z.object({
-    email: z
-      .string({ required_error: "This field is required" })
-      .email()
-      .trim(),
-    password: z
-      .string({ required_error: "This field is required" })
-      .min(1, "Please enter a password")
-      .max(64)
-      .trim(),
-  });
-
-  type FormSchemaType = z.infer<typeof FormSchema>;
 
   const {
     register,
     reset,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormSchemaType>({
-    resolver: zodResolver(FormSchema),
+  } = useForm<signInFormSchemaType>({
+    resolver: zodResolver(signInFormSchema),
   });
 
-  const submitData = async (formData: FormSchemaType) => {
+  const handleSignInUser = async (formData: signInFormSchemaType) => {
     const response = await signInUser(formData.email, formData.password);
-    if (response.error) {
+
+    if (response?.error) {
       toast.error(response.error);
       return;
     }
+
     navigate(from, { replace: true });
     reset();
   };
@@ -60,7 +50,7 @@ const SignInPage = () => {
             Sign In
           </h1>
         </div>
-        <form onSubmit={handleSubmit(submitData)}>
+        <form onSubmit={handleSubmit(handleSignInUser)}>
           <div className="pt-8 space-y-4 text-base text-gray-700 sm:text-lg ">
             <div className="relative">
               <input

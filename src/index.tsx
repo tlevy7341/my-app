@@ -8,6 +8,7 @@ import Layout from "./components/Layout";
 import PersistLogin from "./components/PersistLogin";
 import RequireAuth from "./components/RequireAuth";
 import "./index.css";
+import CheckEmailPage from "./pages/CheckEmailPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -25,7 +26,7 @@ root.render(
       <ToastContainer
         style={{ width: "max-content" }}
         hideProgressBar={true}
-        autoClose={4000}
+        autoClose={2000}
         position="top-center"
       />
       <Routes>
@@ -42,6 +43,7 @@ root.render(
           <Route path="/signin" element={<SignInPage />} />
           <Route path="/user-profile" element={<UserProfilePage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/check-email" element={<CheckEmailPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

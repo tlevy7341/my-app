@@ -14,6 +14,8 @@ interface UserState {
   signInUser: (email: string, password: string) => any;
   signUpUser: (email: string, password: string) => any;
   signOutUser: () => void;
+  sendForgotPasswordEmail: (email: string) => any;
+  resetPassword: (authToken: string, password: string) => any;
 }
 
 export const userStore = create<UserState>((set) => ({
@@ -32,14 +34,13 @@ export const userStore = create<UserState>((set) => ({
           withCredentials: true,
         }
       );
+
       set({
         user: response.data.userData,
         accessToken: response.data.accessToken,
       });
-
-      return { message: "Successfully signed in" };
     } catch (e: any) {
-      return e.response.data;
+      return { error: e.response.data };
     }
   },
   signUpUser: async (email: string, password: string) => {
@@ -49,9 +50,8 @@ export const userStore = create<UserState>((set) => ({
         { email, password },
         { headers: { "content-type": "application/json" } }
       );
-      return { message: "Successfully signed up" };
     } catch (e: any) {
-      return e.response.data;
+      return { error: e.response.data };
     }
   },
   signOutUser: async () => {
@@ -61,6 +61,20 @@ export const userStore = create<UserState>((set) => ({
       return response.data;
     } catch (e: any) {
       return e.response.data;
+    }
+  },
+  sendForgotPasswordEmail: async (email: string) => {
+    try {
+      await axios.post("/forgot-password", { email });
+    } catch (e: any) {
+      return e.response.data;
+    }
+  },
+  resetPassword: async (authToken: string, password: string) => {
+    try {
+      await axios.patch("/reset-password", { password, authToken });
+    } catch (e: any) {
+      return { error: e.response.data };
     }
   },
 }));

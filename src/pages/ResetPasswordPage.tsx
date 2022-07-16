@@ -1,81 +1,66 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { z } from "zod";
+import {
+  passwordResetFormSchema,
+  passwordResetFormSchemaType,
+} from "../schemas/AuthSchemas";
+import { userStore } from "../zustand/userStore";
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
-  const [authToken, setAuthToken] = useState("");
-  const FormSchema = z
-    .object({
-      password: z
-        .string()
-        .min(8, "Password must be at least 8 characters")
-        .trim(),
-      passwordconfirm: z.string().min(8, "Please confirm your password").trim(),
-    })
-    .refine((data) => data.password === data.passwordconfirm, {
-      message: "Passwords do not match",
-      path: ["passwordconfirm"],
-    });
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  type FormSchemaType = z.infer<typeof FormSchema>;
+  const { resetPassword } = userStore();
+  const [authToken, setAuthToken] = useState("");
 
   const {
     register,
     reset,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormSchemaType>({
-    resolver: zodResolver(FormSchema),
+  } = useForm<passwordResetFormSchemaType>({
+    resolver: zodResolver(passwordResetFormSchema),
   });
 
-  const submitData = async (data: FormSchemaType) => {
-    const response = await fetch("/reset-password", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ token: authToken, password: data.password }),
-    });
-    const result = await response.json();
-    if (result.error) {
-      toast.error(result.error);
+  const handleResetPassword = async (data: passwordResetFormSchemaType) => {
+    const response = await resetPassword(authToken, data.password);
+    if (response?.error) {
+      toast.error(response.error);
       return;
     }
-    toast.success(result.message);
-    setTimeout(() => navigate("/signin"), 2000);
+    toast.success("Password successfully reset");
     reset();
+    navigate("/signin", { replace: true });
   };
 
   useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    const token = query.get("token");
-    if (!token) {
-      navigate("/signin");
-    }
+    const token = searchParams.get("token");
+
+    if (!token) navigate("/forgot-password", { replace: true });
+
     setAuthToken(token as string);
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center ">
-      <div className="px-4 sm:max-w-xl sm:mx-auto py-10 bg-white shadow-lg rounded sm:p-20">
+    <div className="flex flex-col justify-center min-h-screen bg-gray-100 ">
+      <div className="px-4 py-10 bg-white rounded shadow-lg sm:max-w-xl sm:mx-auto sm:p-20">
         <div>
-          <h1 className="text-2xl text-center text-black font-semibold">
+          <h1 className="text-2xl font-semibold text-center text-black">
             Reset Password
           </h1>
         </div>
-        <form onSubmit={handleSubmit(submitData)}>
-          <div className="pt-8 text-base  space-y-4 text-gray-700 sm:text-lg ">
+        <form onSubmit={handleSubmit(handleResetPassword)}>
+          <div className="pt-8 space-y-4 text-base text-gray-700 sm:text-lg ">
             <div className="relative">
               <input
                 {...register("password")}
                 id="password"
                 name="password"
                 type="password"
-                className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600"
+                className="w-full h-10 text-gray-900 placeholder-transparent border-b-2 border-gray-300 peer focus:outline-none focus:borer-rose-600"
                 placeholder="New Password"
               />
               <label
@@ -85,7 +70,7 @@ const ResetPasswordPage = () => {
                 New Password
               </label>
               {errors.password && (
-                <p className="text-sm mt-0 text-red-500">
+                <p className="mt-0 text-sm text-red-500">
                   {errors.password.message}
                 </p>
               )}
@@ -96,7 +81,7 @@ const ResetPasswordPage = () => {
                 id="passwordconfirm"
                 name="passwordconfirm"
                 type="password"
-                className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600"
+                className="w-full h-10 text-gray-900 placeholder-transparent border-b-2 border-gray-300 peer focus:outline-none focus:borer-rose-600"
                 placeholder="Confirm Password"
               />
               <label
@@ -106,12 +91,12 @@ const ResetPasswordPage = () => {
                 Confirm Password
               </label>
               {errors.passwordconfirm && (
-                <p className="text-sm mt-0 text-red-500">
+                <p className="mt-0 text-sm text-red-500">
                   {errors.passwordconfirm.message}
                 </p>
               )}
             </div>
-            <button className="btn bg-blue-500 text-white border-blue-500 hover:bg-blue-500 hover:border-blue-500 focus:border-blue-500  w-full">
+            <button className="w-full text-white bg-blue-500 border-blue-500 btn hover:bg-blue-500 hover:border-blue-500 focus:border-blue-500">
               Reset Password
             </button>
           </div>
