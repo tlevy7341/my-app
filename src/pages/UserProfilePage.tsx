@@ -1,41 +1,81 @@
-import { createAvatar } from "@dicebear/avatars";
-import * as style from "@dicebear/avatars-bottts-sprites";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-type UserType = {
-  id: number;
-  email: string;
-  password: string;
-  createdAt: string;
-};
+import { toast } from "react-toastify";
+import getAvatar from "../utils/getAvatar";
+import { userStore } from "../zustand/userStore";
 
 const UserProfilePage = () => {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState<UserType>();
+  const [darkMode, setDarkMode] = useState(false);
+  const { user, changeAvatar, deleteAccount, accessToken } = userStore();
+  const [avatar, setAvatar] = useState(user?.avatar);
+  const effectRan = useRef(false);
 
-  let avatar = createAvatar(style, { dataUri: true, size: 128 });
+  const handleOnChangeAvatar = (id: number) => {
+    const newAvatar = getAvatar();
+    changeAvatar(newAvatar, id);
+    setAvatar(newAvatar);
+  };
+
+  const handleDeleteAccount = async (id: number) => {
+    const response = await deleteAccount(id, accessToken!);
+    if (response?.error) {
+      toast.error(response.error);
+      return;
+    }
+    toast.success("Account deleted successfully");
+    navigate("/signin", { replace: true });
+  };
 
   useEffect(() => {
-    if (!sessionStorage.getItem("user")) {
-      navigate("/signin");
-    } else {
-      setCurrentUser(JSON.parse(sessionStorage.getItem("user") as string));
+    if (effectRan.current === false) {
+      const localStorageDarkMode = localStorage.getItem("darkMode");
+
+      if (localStorageDarkMode) {
+        setDarkMode(JSON.parse(localStorageDarkMode));
+      }
+      return () => {
+        effectRan.current = true;
+      };
     }
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem("darkMode", JSON.stringify(darkMode));
+  }, [darkMode, avatar]);
+
   return (
     <>
-      <div className="w-screen h-screen bg-white text-gray-800 flex gap-y-4 justify-center items-center">
-        <div className="h-full  flex flex-col justify-around">
-          <div className="rounded-3xl border-4 flex justify-center items-center p-3 border-black">
-            <img src={avatar} alt="picture of the user avatar" />
+      <div className="flex items-center justify-center w-screen h-screen text-gray-800 bg-white gap-y-4">
+        <div className="flex flex-col justify-around h-full">
+          <div className="flex flex-col justify-center">
+            <div className="flex items-center justify-center p-3 border-2 border-black rounded-3xl">
+              <img src={avatar} alt="picture of the user avatar" />
+            </div>
+            <button
+              onClick={() => handleOnChangeAvatar(user!.id)}
+              className="mt-2 btn btn-xs"
+            >
+              Change Avatar
+            </button>
           </div>
-
-          <p className="flex items-center">
-            <span className="text-2xl pr-2 font-bold ">Hello</span>
-            <span>{currentUser?.email}</span>
-          </p>
+          <div>
+            <p className="flex items-center">
+              <span className="pr-2 text-2xl font-bold ">Hello</span>
+              <span>{user?.email}</span>
+            </p>
+            <div className="pt-4 form-control">
+              <label className="label">
+                <span className="text-gray-800 label-text">Dark Mode</span>
+                <input
+                  onChange={() => setDarkMode(!darkMode)}
+                  type="checkbox"
+                  className="toggle"
+                  checked={darkMode}
+                />
+              </label>
+            </div>
+          </div>
           <label
             htmlFor="confirm-delete-account"
             className="btn btn-outline btn-error"
@@ -51,11 +91,11 @@ const UserProfilePage = () => {
         className="modal-toggle"
       />
       <div className="modal modal-bottom sm:modal-middle">
-        <div className="modal-box p-10">
-          <h3 className="font-bold text-red-400 text-center text-lg">
+        <div className="p-10 modal-box">
+          <h3 className="text-lg font-bold text-center text-red-400">
             Are you sure you want to delete your account?
           </h3>
-          <div className="flex justify-around items-stretch">
+          <div className="flex items-stretch justify-around">
             <div className="modal-action">
               <label
                 htmlFor="confirm-delete-account"
@@ -66,6 +106,7 @@ const UserProfilePage = () => {
             </div>
             <div className="modal-action">
               <label
+                onClick={() => handleDeleteAccount(user!.id)}
                 htmlFor="confirm-delete-account"
                 className="btn btn-outline btn-success"
               >

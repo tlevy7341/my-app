@@ -35,13 +35,13 @@ root.render(
           <Route element={<PersistLogin />}>
             <Route element={<RequireAuth />}>
               <Route path="/" element={<App />} />
+              <Route path="/user-profile" element={<UserProfilePage />} />
             </Route>
           </Route>
 
           {/* Public Routes */}
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/signin" element={<SignInPage />} />
-          <Route path="/user-profile" element={<UserProfilePage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/check-email" element={<CheckEmailPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
